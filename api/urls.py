@@ -1,6 +1,6 @@
 from rest_framework import routers
 from django.urls import path, include
-from .views import ItemViewSet, ItemImportView
+from .views import ItemViewSet, ItemImportView, upload_items_view
 
 router = routers.DefaultRouter()
 router.register(r"items", ItemViewSet)
