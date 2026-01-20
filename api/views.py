@@ -16,6 +16,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework import status
 from .models import Item
 from .serializers import FileUploadSerializer
+from .forms import ExcelUploadForm
 
 class ItemImportView(APIView):
     parser_classes = [MultiPartParser]  # Важно для приема файлов
