@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from .models import Item
 from .serializers import ItemSerializer
-
+from rest_framework import generics
 
 class ItemViewSet(viewsets.ModelViewSet):
     queryset = Item.objects.all()
@@ -155,3 +155,11 @@ def upload_items_view(request):
         form = ExcelUploadForm()
 
     return render(request, 'upload.html', {'form': form})
+
+
+
+class ItemsListView(generic.ListAPIView):
+    model = Item
+    queryset = Item.objects.all()
+    serializer_class = ItemSerializer
+    
