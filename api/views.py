@@ -158,7 +158,7 @@ def upload_items_view(request):
 
 
 
-class ItemsListView(generic.ListAPIView):
+class ItemsListView(generics.ListAPIView):
     model = Item
     queryset = Item.objects.all()
     serializer_class = ItemSerializer
