@@ -9,6 +9,6 @@ urlpatterns = [
     path("", include(router.urls)),
     path('import/', ItemImportView.as_view(), name='item_import'),
     path('import_from_site/', upload_items_view, name='upload_items'),
-    path('items/', ItemsListView.as_view(), name='item_list')
+    path('itemslist/', ItemsListView.as_view(), name='item_list')
 ]
     
