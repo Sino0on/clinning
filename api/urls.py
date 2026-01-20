@@ -8,5 +8,6 @@ router.register(r"items", ItemViewSet)
 urlpatterns = [
     path("", include(router.urls)),
     path('import/', ItemImportView.as_view(), name='item_import'),
+    path('import_from_site/', upload_items_view, name='upload_items')
 ]
     
