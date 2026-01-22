@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Item
+from .models import *
 
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -34,3 +34,38 @@ class FileUploadSerializer(serializers.Serializer):
         if not value.name.endswith('.xlsx'):
             raise serializers.ValidationError("Файл должен быть формата .xlsx")
         return value
+
+
+
+class PartnersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Partners
+        fields = '__all__'
+
+
+
+class FeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feedback
+        fields = '__all__'
+
+
+class UseproductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Useproduct
+        fields = '__all__'
+
+
+
+class BackgroundImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BackgroundImage
+        fields = '__all__'
+
+
+class DoiposleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Doiposle
+        fields = '__all__'
+    
+

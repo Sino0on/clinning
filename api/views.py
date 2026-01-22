@@ -1,6 +1,6 @@
 from rest_framework import viewsets
-from .models import Item
-from .serializers import ItemSerializer
+from .models import *
+from .serializers import *
 from rest_framework import generics
 
 class ItemViewSet(viewsets.ModelViewSet):
@@ -163,3 +163,35 @@ class ItemsListView(generics.ListAPIView):
     queryset = Item.objects.all()
     serializer_class = ItemSerializer
     
+
+
+class PartnersListView(generics.ListAPIView):
+    model = Partners
+    queryset = Partners.objects.all()
+    serializer_class = PartnersSerializer
+
+
+class FeedbackListView(generics.ListAPIView):
+    model = Feedback
+    queryset = Feedback.objects.all()
+    serializer_class = FeedbackSerializer
+    
+
+class UseproductListView(generics.ListAPIView):
+    model = Useproduct
+    queryset = Useproduct.objects.all()
+    serializer_class = UseproductSerializer
+
+
+class BackgroundImageView(generics.ListAPIView):
+    model = BackgroundImage
+    queryset = BackgroundImage.objects.all()
+    serializer_class = BackgroundImageSerializer
+
+
+class DoiposleListView(generics.ListAPIView):
+    model = Doiposle
+    queryset = Doiposle.objects.all()
+    serializer_class = DoiposleSerializer
+
+
