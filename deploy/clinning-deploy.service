@@ -1,0 +1,8 @@
+[Unit]
+Description=Автодеплой бэкенда clinning, если в origin/main есть новые коммиты
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/clinning-deploy check

@@ -1,0 +1,10 @@
+[Unit]
+Description=Раз в минуту проверять бэкенд clinning на новые коммиты
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=10s
+
+[Install]
+WantedBy=timers.target
