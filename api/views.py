@@ -164,36 +164,4 @@ class ItemsListView(generics.ListAPIView):
     model = Item
     queryset = Item.objects.all()
     serializer_class = ItemSerializer
-    
-
-
-class PartnersListView(generics.ListAPIView):
-    model = Partners
-    queryset = Partners.objects.all()
-    serializer_class = PartnersSerializer
-
-
-class FeedbackListView(generics.ListAPIView):
-    model = Feedback
-    queryset = Feedback.objects.all()
-    serializer_class = FeedbackSerializer
-    
-
-class UseproductListView(generics.ListAPIView):
-    model = Useproduct
-    queryset = Useproduct.objects.all()
-    serializer_class = UseproductSerializer
-
-
-class BackgroundImageView(generics.ListAPIView):
-    model = BackgroundImage
-    queryset = BackgroundImage.objects.all()
-    serializer_class = BackgroundImageSerializer
-
-
-class DoiposleListView(generics.ListAPIView):
-    model = Doiposle
-    queryset = Doiposle.objects.all()
-    serializer_class = DoiposleSerializer
-
 

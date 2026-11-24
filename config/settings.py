@@ -33,6 +33,8 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    # Тема админки — обязательно до django.contrib.admin
+    "unfold",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -43,6 +45,7 @@ INSTALLED_APPS = [
     "rest_framework",
     # Local apps
     "api",
+    "content",
 ]
 
 MIDDLEWARE = [
@@ -142,7 +145,9 @@ STATIC_URL = "/static/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
 
-CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default="").split(',')
+CSRF_TRUSTED_ORIGINS = [
+    o.strip() for o in config("CSRF_TRUSTED_ORIGINS", default="").split(",") if o.strip()
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
@@ -156,4 +161,115 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ]
+}
+
+
+# --- Контент сайта taza-ayim.kg ---
+
+# Публичный адрес бэкенда: из него собираются полные URL картинок для сайта
+PUBLIC_BASE_URL = config("PUBLIC_BASE_URL", default="https://clinning.sino0on.com")
+
+# Мгновенное обновление сайта после правок в админке (см. content/signals.py).
+# Если секрет не задан, сайт всё равно обновится сам в течение ~минуты.
+FRONTEND_REVALIDATE_URL = config(
+    "FRONTEND_REVALIDATE_URL", default="https://taza-ayim.kg/api/revalidate"
+)
+REVALIDATE_SECRET = config("REVALIDATE_SECRET", default="")
+
+# Загруженные файлы должен читать nginx (он раздаёт /media/)
+FILE_UPLOAD_PERMISSIONS = 0o644
+FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
+
+
+# --- Админка (django-unfold) ---
+
+from django.urls import reverse_lazy  # noqa: E402
+
+
+def _is_superuser(request):
+    return request.user.is_superuser
+
+
+UNFOLD = {
+    "SITE_TITLE": "Таза Айым — управление сайтом",
+    "SITE_HEADER": "Таза Айым",
+    "SITE_SUBHEADER": "Управление сайтом",
+    "SITE_URL": "https://taza-ayim.kg/ru",
+    "SITE_SYMBOL": "cleaning_services",
+    "SHOW_VIEW_ON_SITE": False,
+    "COLORS": {
+        # Зелёный в тон сайта (#006837)
+        "primary": {
+            "50": "#f0fdf4",
+            "100": "#dcfce7",
+            "200": "#bbf7d0",
+            "300": "#86efac",
+            "400": "#4ade80",
+            "500": "#16a34a",
+            "600": "#0b7a3e",
+            "700": "#006837",
+            "800": "#05532d",
+            "900": "#064326",
+            "950": "#022c17",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": False,
+        "show_all_applications": False,
+        "navigation": [
+            {
+                "title": "Сайт",
+                "items": [
+                    {
+                        "title": "Отзывы",
+                        "icon": "reviews",
+                        "link": reverse_lazy("admin:content_review_changelist"),
+                    },
+                    {
+                        "title": "До и после",
+                        "icon": "compare",
+                        "link": reverse_lazy("admin:content_beforeafter_changelist"),
+                    },
+                    {
+                        "title": "Услуги",
+                        "icon": "cleaning_services",
+                        "link": reverse_lazy("admin:content_service_changelist"),
+                    },
+                    {
+                        "title": "Партнёры",
+                        "icon": "handshake",
+                        "link": reverse_lazy("admin:content_partner_changelist"),
+                    },
+                    {
+                        "title": "Бренды химии",
+                        "icon": "science",
+                        "link": reverse_lazy("admin:content_chemicalbrand_changelist"),
+                    },
+                    {
+                        "title": "Тексты сайта",
+                        "icon": "translate",
+                        "link": reverse_lazy("admin:api_item_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Доступ",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Пользователи",
+                        "icon": "person",
+                        "link": reverse_lazy("admin:auth_user_changelist"),
+                        "permission": _is_superuser,
+                    },
+                    {
+                        "title": "Группы",
+                        "icon": "group",
+                        "link": reverse_lazy("admin:auth_group_changelist"),
+                        "permission": _is_superuser,
+                    },
+                ],
+            },
+        ],
+    },
 }

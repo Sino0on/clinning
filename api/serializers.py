@@ -37,35 +37,3 @@ class FileUploadSerializer(serializers.Serializer):
 
 
 
-class PartnersSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Partners
-        fields = '__all__'
-
-
-
-class FeedbackSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Feedback
-        fields = '__all__'
-
-
-class UseproductSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Useproduct
-        fields = '__all__'
-
-
-
-class BackgroundImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BackgroundImage
-        fields = '__all__'
-
-
-class DoiposleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Doiposle
-        fields = '__all__'
-    
-
