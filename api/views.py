@@ -83,10 +83,12 @@ class ItemImportView(APIView):
 import openpyxl
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
 from django.db import transaction
 from .models import Item
 from .forms import ExcelUploadForm
 
+@staff_member_required
 def upload_items_view(request):
     if request.method == 'POST':
         form = ExcelUploadForm(request.POST, request.FILES)
