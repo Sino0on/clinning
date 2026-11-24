@@ -1,0 +1,81 @@
+{% extends 'admin/base.html' %}
+{% comment %}
+  Стартовая страница админки для заказчицы: крупные действия «добавить»,
+  что сейчас на сайте и подсказки. Данные — content/dashboard.py.
+  Сетка на встроенных стилях: в CSS темы есть только её собственные классы.
+{% endcomment %}
+{% load i18n unfold %}
+
+{% block title %}{{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+<div style="max-width:1040px;display:flex;flex-direction:column;gap:28px">
+
+    <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
+        <div>
+            {% component "unfold/components/title.html" %}Здравствуйте{% if request.user.first_name %}, {{ request.user.first_name }}{% endif %}!{% endcomponent %}
+            {% component "unfold/components/text.html" with class="text-base mt-1" %}Здесь вы обновляете сайт taza-ayim.kg. Изменения появляются на сайте примерно через 10 секунд.{% endcomponent %}
+        </div>
+        {% component "unfold/components/button.html" with href=dashboard.site_url icon="open_in_new" size="lg" attrs=dashboard.site_attrs %}Открыть сайт{% endcomponent %}
+    </div>
+
+    {% if dashboard.videos_processing or dashboard.videos_failed %}
+        {% component "unfold/components/card.html" with href=dashboard.reviews_url icon="movie" %}
+            {% if dashboard.videos_processing %}
+                <p class="font-semibold text-important">Видео обрабатывается: {{ dashboard.videos_processing }}</p>
+                <p class="text-sm">Обычно это 1–3 минуты. Потом видео само появится на сайте.</p>
+            {% endif %}
+            {% if dashboard.videos_failed %}
+                <p class="font-semibold" style="color:#dc2626">Не удалось обработать видео: {{ dashboard.videos_failed }}</p>
+                <p class="text-sm">Откройте «Отзывы», отметьте это видео и выберите действие «Обработать видео заново».</p>
+            {% endif %}
+        {% endcomponent %}
+    {% endif %}
+
+    {% if dashboard.add_actions %}
+    <section>
+        <h2 class="font-semibold text-important" style="font-size:17px;margin-bottom:12px">Добавить на сайт</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px">
+            {% for a in dashboard.add_actions %}
+                {% component "unfold/components/card.html" with href=a.url icon=a.icon %}
+                    <p class="font-semibold text-important" style="font-size:16px">+ {{ a.title }}</p>
+                    <p class="text-sm" style="margin-top:4px">{{ a.hint }}</p>
+                {% endcomponent %}
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <section>
+        <h2 class="font-semibold text-important" style="font-size:17px;margin-bottom:12px">Сейчас на сайте</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px">
+            {% for s in dashboard.sections %}
+                {% component "unfold/components/card.html" with href=s.url icon=s.icon %}
+                    <p class="text-sm">{{ s.title }}</p>
+                    <p class="font-semibold text-important" style="font-size:26px;line-height:1.2">{{ s.published }}</p>
+                    <p class="text-sm">{% if s.texts %}текстов на двух языках{% elif s.hidden %}скрыто: {{ s.hidden }}{% else %}все показаны{% endif %}</p>
+                {% endcomponent %}
+            {% endfor %}
+        </div>
+    </section>
+
+    {% component "unfold/components/card.html" with title="Подсказки" %}
+        <ul style="display:flex;flex-direction:column;gap:10px;margin:0;padding-left:18px;list-style:disc">
+            <li><b>Порядок на сайте:</b> в списке перетащите строку за значок ⠿ слева и нажмите «Сохранить» внизу.</li>
+            <li><b>Убрать с сайта, не удаляя:</b> снимите галочку «Показывать на сайте» и нажмите «Сохранить».</li>
+            <li><b>Кыргызча можно не заполнять:</b> если поле пустое, на кыргызской версии сайта покажется русский текст.</li>
+        </ul>
+    {% endcomponent %}
+
+    {% if request.user.is_superuser %}
+        <section>
+            <h2 class="font-semibold text-important" style="font-size:17px;margin-bottom:12px">Все разделы (администратор)</h2>
+            {% include "unfold/helpers/app_list_default.html" %}
+        </section>
+    {% endif %}
+</div>
+{% endblock %}

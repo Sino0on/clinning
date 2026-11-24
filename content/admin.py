@@ -47,6 +47,21 @@ class ContentAdmin(ModelAdmin):
     list_per_page = 50
     warn_unsaved_form = True
 
+    # Пока запись не создана, превью «Сейчас загружено» и служебные поля
+    # пустые — на форме добавления их не показываем.
+    add_hidden_fields = ("preview_large", "preview_pair", "status_badge", "error")
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if obj is not None:
+            return fieldsets
+        cleaned = []
+        for name, opts in fieldsets:
+            fields = [f for f in opts["fields"] if f not in self.add_hidden_fields]
+            if fields:
+                cleaned.append((name, {**opts, "fields": fields}))
+        return cleaned
+
 
 @admin.register(Review)
 class ReviewAdmin(ContentAdmin):

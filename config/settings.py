@@ -63,7 +63,8 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        # Свои шаблоны поверх темы админки (стартовая страница: templates/admin/index.html)
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -125,6 +126,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
 LANGUAGE_CODE = "ru-ru"
+
+# Свой перевод надписей темы админки (у django-unfold нет русского)
+LOCALE_PATHS = [BASE_DIR / "locale"]
 
 TIME_ZONE = "Asia/Bishkek"
 
@@ -197,6 +201,8 @@ UNFOLD = {
     "SITE_URL": "https://taza-ayim.kg/ru",
     "SITE_SYMBOL": "cleaning_services",
     "SHOW_VIEW_ON_SITE": False,
+    # Стартовая страница с крупными «Добавить…» и счётчиками (content/dashboard.py)
+    "DASHBOARD_CALLBACK": "content.dashboard.dashboard_callback",
     "COLORS": {
         # Зелёный в тон сайта (#006837)
         "primary": {
