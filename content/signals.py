@@ -10,6 +10,8 @@ Excel на 160 строк — это десятки сохранений, а з�
 
 import logging
 import threading
+import time
+from urllib.parse import urljoin
 
 import requests
 from django.conf import settings
@@ -19,6 +21,8 @@ from django.db.models.signals import post_delete, post_save
 logger = logging.getLogger(__name__)
 
 DEBOUNCE_SECONDS = 3
+# Страницы сайта, которые используют контент из админки
+WARMUP_PATHS = ["/ru", "/ky", "/ru/prices", "/ky/prices"]
 _timer = None
 _lock = threading.Lock()
 
@@ -32,6 +36,14 @@ def _send():
         )
         if r.status_code != 200:
             logger.warning("Обновление сайта: ответ %s %s", r.status_code, r.text[:200])
+            return
+        # Прогрев: сайт сбрасывает кэш в режиме stale-while-revalidate, и
+        # первый запрос после сброса получает прежнюю версию, запуская
+        # пересборку в фоне. Этот запрос делаем сами, чтобы посетители
+        # (и сама заказчица, проверяя правку) сразу видели новое.
+        time.sleep(1)
+        for path in WARMUP_PATHS:
+            requests.get(urljoin(settings.FRONTEND_REVALIDATE_URL, path), timeout=30)
     except requests.RequestException as e:
         logger.warning("Обновление сайта не удалось: %s", e)
 
