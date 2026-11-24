@@ -1,0 +1,11 @@
+[Unit]
+Description=Каждую ночь бэкап бэкенда clinning
+
+[Timer]
+# 03:30 по Бишкеку (на сервере UTC)
+OnCalendar=*-*-* 21:30:00 UTC
+Persistent=true
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target

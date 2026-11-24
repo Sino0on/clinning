@@ -42,12 +42,38 @@ clinning-deploy deploy   # задеплоить прямо сейчас (в то
 Миграции базы назад автоматически не откатываются. Для этого есть бэкапы в
 `/root/backups/clinning/auto/`.
 
+## Ежедневный бэкап
+
+Таймер `clinning-backup.timer` каждую ночь (03:30 по Бишкеку) запускает
+[backup.sh](backup.sh) (на сервере: `/usr/local/bin/clinning-backup`): база и
+загруженные файлы, 14 дней, в `/root/backups/clinning/daily/ДАТА/`. Как
+восстановить, написано в шапке скрипта. Бэкап лежит на том же сервере: от
+ошибок спасает, от потери сервера — нет.
+
+## Админка контента (приложение `content`)
+
+Заказчица сама ведёт на сайте отзывы, «до/после», услуги, партнёров и бренды
+химии в `/admin/`, тема — django-unfold 0.91 (последняя версия под Python 3.11).
+
+- Фото при загрузке поворачиваются по EXIF и ужимаются (`content/media.py`).
+- Видео-отзывы (до 300 МБ) сжимаются в фоне через ffmpeg, обложка делается
+  сама (`content/video.py`). Застрявшие или упавшие видео: действие
+  «Обработать видео заново» в списке отзывов или `manage.py process_videos`.
+- Сайт берёт всё одним запросом `GET /api/content/`.
+- После сохранения бэкенд сам обновляет сайт (`content/signals.py`): POST на
+  `https://taza-ayim.kg/api/revalidate` с секретом `REVALIDATE_SECRET` из `.env`
+  и прогрев страниц. Правка видна на сайте через ~10 секунд.
+- Учётка для редактора без доступа к пользователям и настройкам:
+  `python manage.py setup_content_editor --user ЛОГИН --first-name Имя`,
+  затем пароль: `python manage.py changepassword ЛОГИН`.
+
 ## Если меняете файлы в этой папке
 
 Сервер использует копии, их нужно обновить:
 
 ```bash
 scp deploy/deploy.sh root@217.114.0.30:/usr/local/bin/clinning-deploy
-scp deploy/clinning-deploy.service deploy/clinning-deploy.timer root@217.114.0.30:/etc/systemd/system/
+scp deploy/backup.sh root@217.114.0.30:/usr/local/bin/clinning-backup
+scp deploy/*.service deploy/*.timer root@217.114.0.30:/etc/systemd/system/
 ssh root@217.114.0.30 'systemctl daemon-reload'
 ```

@@ -1,0 +1,9 @@
+[Unit]
+Description=Ежедневный бэкап бэкенда clinning (база и загруженные файлы)
+After=docker.service
+
+[Service]
+Type=oneshot
+Nice=10
+IOSchedulingClass=idle
+ExecStart=/usr/local/bin/clinning-backup
