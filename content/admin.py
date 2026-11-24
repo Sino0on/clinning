@@ -7,7 +7,16 @@ from django.utils.html import format_html
 from unfold.admin import ModelAdmin
 from unfold.decorators import action, display
 
-from .models import BeforeAfter, ChemicalBrand, Partner, Review, Service
+from .models import (
+    BeforeAfter,
+    ChemicalBrand,
+    Partner,
+    Review,
+    Service,
+    TelegramEditor,
+    TelegramInvite,
+)
+from .telegram import invite_link
 from .video import start_video_processing
 
 
@@ -209,3 +218,45 @@ class ChemicalBrandAdmin(ContentAdmin):
     @display(description="Сейчас загружено")
     def preview_large(self, obj):
         return _large(obj.logo.url if obj.logo else None, contain=True)
+
+
+# ---------- Telegram-бот (только для администратора) ----------
+
+
+@admin.register(TelegramInvite)
+class TelegramInviteAdmin(ModelAdmin):
+    """Ссылки-приглашения: создайте запись, отправьте ссылку человеку."""
+
+    list_display = ["note", "link", "used_by", "used_at", "created_at"]
+    readonly_fields = ["link", "used_by", "used_at"]
+    fields = ["note", "link", "used_by", "used_at"]
+
+    @display(description="Ссылка-приглашение")
+    def link(self, obj):
+        if not obj.pk:
+            return "Появится после сохранения"
+        if obj.used_at:
+            return "Уже использована"
+        url = invite_link(obj.code)
+        if not url:
+            return "Бот не настроен: нет TELEGRAM_BOT_TOKEN"
+        return format_html('<a href="{0}" target="_blank" rel="noopener">{0}</a>', url)
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser
+
+
+@admin.register(TelegramEditor)
+class TelegramEditorAdmin(ModelAdmin):
+    """Кто может публиковать отзывы через бота. Снимите «Доступ разрешён», чтобы закрыть."""
+
+    list_display = ["name", "telegram_id", "is_active", "created_at"]
+    list_editable = ["is_active"]
+    readonly_fields = ["telegram_id", "created_at"]
+    fields = ["name", "telegram_id", "is_active", "created_at"]
+
+    def has_add_permission(self, request):
+        return False  # редакторы появляются только по приглашению
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser

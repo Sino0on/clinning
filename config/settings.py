@@ -180,6 +180,10 @@ FRONTEND_REVALIDATE_URL = config(
 )
 REVALIDATE_SECRET = config("REVALIDATE_SECRET", default="")
 
+# Telegram-бот для отзывов (сервис bot, content/management/commands/run_telegram_bot.py).
+# Задаётся на сервере командой clinning-set-bot-token. Без токена бот выключен.
+TELEGRAM_BOT_TOKEN = config("TELEGRAM_BOT_TOKEN", default="")
+
 # Загруженные файлы должен читать nginx (он раздаёт /media/)
 FILE_UPLOAD_PERMISSIONS = 0o644
 FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
@@ -272,6 +276,12 @@ UNFOLD = {
                         "title": "Группы",
                         "icon": "group",
                         "link": reverse_lazy("admin:auth_group_changelist"),
+                        "permission": _is_superuser,
+                    },
+                    {
+                        "title": "Telegram-бот",
+                        "icon": "send",
+                        "link": reverse_lazy("admin:content_telegraminvite_changelist"),
                         "permission": _is_superuser,
                     },
                 ],

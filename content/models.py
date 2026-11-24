@@ -5,6 +5,8 @@
 и пережимаются; видео-отзывы сжимаются в фоне (см. video.py).
 """
 
+import secrets
+
 from django.db import models, transaction
 
 from .media import (
@@ -78,6 +80,8 @@ class Review(SortablePublishable):
         help_text="Необязательно. Например: «Отзыв Айгуль, генеральная уборка».",
     )
     caption_ky = models.CharField("Подпись (кыргызча)", max_length=200, blank=True)
+    # Если отзыв пришёл через Telegram-бота: куда написать, когда видео готово
+    telegram_chat_id = models.BigIntegerField(null=True, blank=True, editable=False)
 
     # Импорт уже готовых (сжатых) видео без повторной обработки
     skip_processing = False
@@ -240,4 +244,55 @@ class ChemicalBrand(SortablePublishable):
     def save(self, *args, **kwargs):
         optimize_image(self.logo, max_side=600)
         super().save(*args, **kwargs)
+
+
+# ---------- Telegram-бот для отзывов (content/management/commands/run_telegram_bot.py) ----------
+
+
+class TelegramEditor(models.Model):
+    """Кто может публиковать отзывы через бота. Появляется по приглашению."""
+
+    telegram_id = models.BigIntegerField("Telegram ID", unique=True)
+    name = models.CharField("Имя", max_length=120, blank=True)
+    is_active = models.BooleanField(
+        "Доступ разрешён", default=True, help_text="Снимите, чтобы закрыть доступ к боту."
+    )
+    created_at = models.DateTimeField("Добавлен", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Редактор в Telegram"
+        verbose_name_plural = "Редакторы в Telegram"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.name or str(self.telegram_id)
+
+
+def new_invite_code():
+    return secrets.token_urlsafe(12)
+
+
+class TelegramInvite(models.Model):
+    """Одноразовая ссылка t.me/<бот>?start=<code>, по которой бот даёт доступ."""
+
+    code = models.CharField(max_length=40, unique=True, default=new_invite_code, editable=False)
+    note = models.CharField("Для кого", max_length=120, blank=True)
+    created_at = models.DateTimeField("Создано", auto_now_add=True)
+    used_at = models.DateTimeField("Использовано", null=True, blank=True, editable=False)
+    used_by = models.ForeignKey(
+        TelegramEditor,
+        verbose_name="Кто вошёл",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        editable=False,
+    )
+
+    class Meta:
+        verbose_name = "Приглашение в бота"
+        verbose_name_plural = "Приглашения в бота"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.note or self.code
 

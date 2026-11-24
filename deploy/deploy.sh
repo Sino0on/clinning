@@ -76,6 +76,7 @@ deploy() {
       dc up -d web >/dev/null 2>&1 || true
       dc restart web >/dev/null
       healthy && log "API снова работает на ${old:0:7}" || log "ВНИМАНИЕ: API не отвечает и после отката!"
+      restart_bot
     fi
     exit 1
   }
@@ -111,8 +112,22 @@ deploy() {
   sleep 3
 
   healthy || fail "после переключения /api/items/ не отвечает"
+  restart_bot
   rm -f "$STATE_DIR/failed_sha"
   log "Готово: работает $(git log --oneline -1)"
+}
+
+# Telegram-бот живёт отдельным процессом: после деплоя его нужно пересоздать,
+# чтобы он подхватил новый код/образ. Неподтверждённые «Опубликовать?»
+# при этом забываются — человек просто отправит отзыв ещё раз.
+restart_bot() {
+  if dc config --services 2>/dev/null | grep -qx bot; then
+    if dc up -d --no-deps --force-recreate bot >/dev/null 2>&1; then
+      log "Telegram-бот перезапущен"
+    else
+      log "ВНИМАНИЕ: Telegram-бот не перезапустился (docker compose logs bot)"
+    fi
+  fi
 }
 
 check() {

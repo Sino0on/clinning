@@ -1,6 +1,7 @@
 services:
   web:
     build: .
+    image: clinning-web
     # 2 воркера: пока один принимает большую загрузку из админки, второй
     # отвечает сайту. timeout 120 — запас на загрузку видео до 300 МБ.
     command: gunicorn config.wsgi:application --bind 0.0.0.0:8111 --workers 2 --timeout 120
@@ -12,6 +13,20 @@ services:
       - .env
     depends_on:
       - db
+
+  # Telegram-бот для отзывов (content/management/commands/run_telegram_bot.py).
+  # Тот же образ, что у web. Без TELEGRAM_BOT_TOKEN просто спит.
+  bot:
+    image: clinning-web
+    pull_policy: never
+    command: python manage.py run_telegram_bot
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+    restart: unless-stopped
 
   db:
     image: postgres:15

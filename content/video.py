@@ -21,6 +21,8 @@ from uuid import uuid4
 from django.conf import settings
 from django.core.files import File
 
+from .telegram import SITE_REVIEWS_URL, notify
+
 logger = logging.getLogger(__name__)
 
 MAX_SIDE = 960
@@ -93,6 +95,10 @@ def process_review_video(review):
             if original != review.file.name:
                 review.file.storage.delete(original)
             logger.info("Видео-отзыв %s обработан", review.pk)
+            notify(
+                review.telegram_chat_id,
+                f"✅ Видео-отзыв обработан и уже на сайте:\n{SITE_REVIEWS_URL}",
+            )
         except subprocess.CalledProcessError as e:
             _fail(review, (e.stderr or str(e))[-1000:])
         except Exception as e:  # noqa: BLE001 — любую ошибку показываем в админке
@@ -106,3 +112,8 @@ def _fail(review, message):
     review.status = Review.Status.FAILED
     review.error = message
     review.save(update_fields=["status", "error", "updated_at"])
+    notify(
+        review.telegram_chat_id,
+        "❌ Не получилось обработать видео. Попробуйте отправить его ещё раз "
+        "или загрузите через админку: https://clinning.sino0on.com/admin/",
+    )
