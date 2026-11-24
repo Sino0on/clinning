@@ -122,6 +122,7 @@ T = {
     "Value": "Значение",
     "View traceback": "Подробности ошибки",
     "Welcome": "Здравствуйте",
+    "Welcome back to": "Вход в",
     "You can not create nested object without parent": "Нельзя создать вложенную запись без основной",
     "You have been successfully logged out from the administration": "Вы вышли из админки",
 }

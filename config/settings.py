@@ -205,6 +205,9 @@ UNFOLD = {
     "SITE_URL": "https://taza-ayim.kg/ru",
     "SITE_SYMBOL": "cleaning_services",
     "SHOW_VIEW_ON_SITE": False,
+    # Всегда светлая тема: проще читать, и экран совпадает со скриншотами
+    # в инструкции для заказчицы, даже если телефон в тёмном режиме
+    "THEME": "light",
     # Стартовая страница с крупными «Добавить…» и счётчиками (content/dashboard.py)
     "DASHBOARD_CALLBACK": "content.dashboard.dashboard_callback",
     "COLORS": {

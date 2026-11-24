@@ -351,6 +351,9 @@ msgstr "Подробности ошибки"
 msgid "Welcome"
 msgstr "Здравствуйте"
 
+msgid "Welcome back to"
+msgstr "Вход в"
+
 msgid "You can not create nested object without parent"
 msgstr "Нельзя создать вложенную запись без основной"
 
