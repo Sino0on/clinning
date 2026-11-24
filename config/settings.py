@@ -191,6 +191,7 @@ FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
 
 # --- Админка (django-unfold) ---
 
+from django.templatetags.static import static  # noqa: E402
 from django.urls import reverse_lazy  # noqa: E402
 
 
@@ -208,6 +209,8 @@ UNFOLD = {
     # Всегда светлая тема: проще читать, и экран совпадает со скриншотами
     # в инструкции для заказчицы, даже если телефон в тёмном режиме
     "THEME": "light",
+    # ...и не даём браузеру помнить прежнюю тёмную/авто (см. сам файл)
+    "SCRIPTS": [lambda request: static("content/force-light-theme.js")],
     # Стартовая страница с крупными «Добавить…» и счётчиками (content/dashboard.py)
     "DASHBOARD_CALLBACK": "content.dashboard.dashboard_callback",
     "COLORS": {
@@ -247,6 +250,11 @@ UNFOLD = {
                         "title": "Услуги",
                         "icon": "cleaning_services",
                         "link": reverse_lazy("admin:content_service_changelist"),
+                    },
+                    {
+                        "title": "Страницы услуг",
+                        "icon": "article",
+                        "link": reverse_lazy("admin:content_servicepage_changelist"),
                     },
                     {
                         "title": "Партнёры",

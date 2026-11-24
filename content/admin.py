@@ -3,9 +3,13 @@
 галочка «Показывать на сайте» прямо в списке."""
 
 from django.contrib import admin, messages
+from django.db import models
+from django.shortcuts import redirect
+from django.urls import reverse
 from django.utils.html import format_html
-from unfold.admin import ModelAdmin
+from unfold.admin import ModelAdmin, StackedInline
 from unfold.decorators import action, display
+from unfold.widgets import UnfoldAdminCheckboxSelectMultipleWidget, UnfoldAdminTextareaWidget
 
 from .models import (
     BeforeAfter,
@@ -13,6 +17,8 @@ from .models import (
     Partner,
     Review,
     Service,
+    ServicePage,
+    ServicePageFAQ,
     TelegramEditor,
     TelegramInvite,
 )
@@ -184,6 +190,173 @@ class ServiceAdmin(ContentAdmin):
     @display(description="Сейчас загружено")
     def preview_large(self, obj):
         return _large(obj.image.url if obj.image else None)
+
+
+class ServicePageFAQInline(StackedInline):
+    model = ServicePageFAQ
+    extra = 0
+    ordering_field = "position"
+    hide_ordering_field = True
+    fields = ["question_ru", "answer_ru", "question_ky", "answer_ky", "position"]
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if isinstance(db_field, models.TextField):
+            kwargs["widget"] = _lines_widget(3)
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+
+def _lines_widget(rows):
+    return UnfoldAdminTextareaWidget(attrs={"rows": rows})
+
+
+@admin.register(ServicePage)
+class ServicePageAdmin(ContentAdmin):
+    """Отдельные страницы услуг. Новую проще всего сделать копией готовой:
+    кнопка «Создать копию» сверху формы или в строке списка."""
+
+    list_display = ["preview", "name_ru", "page_link", "is_published"]
+    # Иначе ссылкой на форму был бы только прочерк, пока нет фото
+    list_display_links = ["preview", "name_ru"]
+    readonly_fields = ["preview_large", "page_links"]
+    inlines = [ServicePageFAQInline]
+    add_hidden_fields = ContentAdmin.add_hidden_fields + ("page_links",)
+    fieldsets = (
+        (
+            "Русский",
+            {
+                "classes": ["tab"],
+                "fields": (
+                    "name_ru",
+                    "title_ru",
+                    "lead_ru",
+                    ("price_ru", "duration_ru"),
+                    "includes_ru",
+                    "body_ru",
+                ),
+            },
+        ),
+        (
+            "Кыргызча",
+            {
+                "classes": ["tab"],
+                "description": "Если поле не заполнено, на кыргызской версии страницы будет русский текст.",
+                "fields": (
+                    "name_ky",
+                    "title_ky",
+                    "lead_ky",
+                    ("price_ky", "duration_ky"),
+                    "includes_ky",
+                    "body_ky",
+                ),
+            },
+        ),
+        (
+            "Фото и примеры",
+            {"classes": ["tab"], "fields": ("image", "preview_large", "before_after")},
+        ),
+        (
+            "Для Google",
+            {
+                "classes": ["tab"],
+                "description": "Необязательно: если пусто, Google покажет заголовок и подзаголовок страницы.",
+                "fields": (
+                    "seo_title_ru",
+                    "seo_description_ru",
+                    "seo_title_ky",
+                    "seo_description_ky",
+                ),
+            },
+        ),
+        (
+            "Публикация",
+            {
+                "classes": ["tab"],
+                "fields": ("is_published", "page_links", "slug", "service"),
+            },
+        ),
+    )
+    actions_detail = ["open_on_site", "make_copy"]
+    actions_row = ["make_copy_row"]
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        rows = {"includes_ru": 8, "includes_ky": 8, "body_ru": 12, "body_ky": 12, "lead_ru": 3, "lead_ky": 3}
+        if db_field.name in rows:
+            kwargs["widget"] = _lines_widget(rows[db_field.name])
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        # Галочки вместо списка с множественным выбором (удобно с телефона).
+        # Виджет передаём сразу, иначе Django допишет к подсказке «Удерживайте Ctrl…»,
+        # а стили возвращаем после super(): Unfold навешивает стили выпадающего списка.
+        if db_field.name == "before_after":
+            kwargs["widget"] = UnfoldAdminCheckboxSelectMultipleWidget()
+        field = super().formfield_for_manytomany(db_field, request, **kwargs)
+        if field is not None and db_field.name == "before_after":
+            field.widget.attrs = UnfoldAdminCheckboxSelectMultipleWidget().attrs
+        return field
+
+    @display(description="Фото")
+    def preview(self, obj):
+        return _img(obj.image.url if obj.image else None)
+
+    @display(description="Сейчас загружено")
+    def preview_large(self, obj):
+        return _large(obj.image.url if obj.image else None)
+
+    @display(description="Адрес на сайте")
+    def page_link(self, obj):
+        url = ServicePage.site_url(obj.slug)
+        return format_html('<a href="{0}" target="_blank" rel="noopener">/uslugi/{1}</a>', url, obj.slug)
+
+    @display(description="Страница на сайте")
+    def page_links(self, obj):
+        if not obj.pk:
+            return "Появится после сохранения"
+        hint = "" if obj.is_published else " (сейчас скрыта: откроется после включения «Показывать на сайте»)"
+        return format_html(
+            '<a href="{0}" target="_blank" rel="noopener">{0}</a><br>'
+            '<a href="{1}" target="_blank" rel="noopener">{1}</a>{2}',
+            ServicePage.site_url(obj.slug, "ru"),
+            ServicePage.site_url(obj.slug, "ky"),
+            hint,
+        )
+
+    def _copy(self, request, object_id):
+        page = ServicePage.objects.get(pk=object_id)
+        copy = page.duplicate()
+        self.message_user(
+            request,
+            "Создана копия страницы (пока скрыта с сайта). Перепишите русские тексты "
+            "под новую услугу, поменяйте фото и адрес. Кыргызские тексты и тексты для "
+            "Google в копии пустые: заполните их или оставьте пустыми, тогда возьмутся "
+            "русские. Затем включите «Показывать на сайте» на вкладке «Публикация».",
+            messages.SUCCESS,
+        )
+        return redirect(reverse("admin:content_servicepage_change", args=[copy.pk]))
+
+    def has_copy_permission(self, request, object_id=None):
+        # Своя проверка: Unfold передаёт сюда ещё и object_id, а has_add_permission его не принимает
+        return self.has_add_permission(request)
+
+    @action(description="Создать копию", icon="content_copy", permissions=["copy"])
+    def make_copy(self, request, object_id):
+        return self._copy(request, object_id)
+
+    @action(description="Создать копию", icon="content_copy", permissions=["copy"])
+    def make_copy_row(self, request, object_id):
+        return self._copy(request, object_id)
+
+    @action(description="Открыть на сайте", icon="open_in_new", attrs={"target": "_blank"})
+    def open_on_site(self, request, object_id):
+        page = ServicePage.objects.get(pk=object_id)
+        if not page.is_published:
+            self.message_user(
+                request,
+                "Страница скрыта. Включите «Показывать на сайте» на вкладке «Публикация» и сохраните.",
+                messages.WARNING,
+            )
+            return redirect(reverse("admin:content_servicepage_change", args=[page.pk]))
+        return redirect(ServicePage.site_url(page.slug))
 
 
 @admin.register(Partner)

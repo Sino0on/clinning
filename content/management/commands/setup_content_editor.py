@@ -10,6 +10,8 @@ PERMISSIONS = {
         "review": ["view", "add", "change", "delete"],
         "beforeafter": ["view", "add", "change", "delete"],
         "service": ["view", "add", "change", "delete"],
+        "servicepage": ["view", "add", "change", "delete"],
+        "servicepagefaq": ["view", "add", "change", "delete"],
         "partner": ["view", "add", "change", "delete"],
         "chemicalbrand": ["view", "add", "change", "delete"],
     },

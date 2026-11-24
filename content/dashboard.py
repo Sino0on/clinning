@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from api.models import Item
 
-from .models import BeforeAfter, ChemicalBrand, Partner, Review, Service
+from .models import BeforeAfter, ChemicalBrand, Partner, Review, Service, ServicePage
 
 SITE_URL = "https://taza-ayim.kg/ru"
 
@@ -13,6 +13,7 @@ ADD_ACTIONS = [
     (Review, "Отзыв", "add_photo_alternate", "Фото, скриншот или видео с телефона"),
     (BeforeAfter, "До и после", "compare", "Два фото одной уборки"),
     (Service, "Услугу", "cleaning_services", "Название, время, описание, фото"),
+    (ServicePage, "Страницу услуги", "article", "Своя страница для Google. Проще сделать копией готовой"),
     (Partner, "Партнёра", "handshake", "Логотип и ссылка"),
 ]
 
@@ -20,6 +21,7 @@ SECTIONS = [
     (Review, "Отзывы", "reviews"),
     (BeforeAfter, "До и после", "compare"),
     (Service, "Услуги", "cleaning_services"),
+    (ServicePage, "Страницы услуг", "article"),
     (Partner, "Партнёры", "handshake"),
     (ChemicalBrand, "Бренды химии", "science"),
 ]
